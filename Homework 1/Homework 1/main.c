@@ -6,8 +6,8 @@
 #include "transformation.h"
 
 // Set window size variables
-int windowWidth = 720;
-int windowHeight = 480;
+int windowWidth = 1600;
+int windowHeight = 900;
 
 // Set maximum number of points that can be placed
 int currentPoints;
@@ -24,7 +24,7 @@ void init(void) {
 	// set background to white
 	glClearColor(1.0, 1.0, 1.0, 0.0);
 	glMatrixMode(GL_PROJECTION);
-	gluOrtho2D(0.0, windowWidth, 0.0, windowHeight);
+	gluOrtho2D(-windowWidth/2, windowWidth/2, -windowHeight/2, windowHeight/2);
 	glMatrixMode(GL_MODELVIEW);
 }
 
@@ -42,6 +42,15 @@ void display(void) {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
+	// Draw quadrants
+	glPointSize(1);
+	glColor3d(0.0, 0.0, 255.0);
+	glBegin(GL_LINES);
+	glVertex2i(-windowWidth/2, 0);
+	glVertex2i(windowWidth/2, 0);
+	glVertex2i(0, -windowHeight/2);
+	glVertex2i(0, windowHeight/2);
+	glEnd();
 	// Iterate through each polygon
 	for (i = 0; i <= currentPolygons; i++) {
 		// Fill simple polygons
@@ -125,6 +134,8 @@ void display(void) {
 }
 
 void mouseInput(int button, int state, int x, int y) {
+	int newX = x - windowWidth/2;
+	int newY = -y + windowHeight/2;
 	// When left click is pressed
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
 		if (mode == "Plotting") {
@@ -133,8 +144,8 @@ void mouseInput(int button, int state, int x, int y) {
 				return;
 			}
 			// Set x,y coordinates of created point
-			polygons[currentPolygons].vertices[currentPoints].x = x;
-			polygons[currentPolygons].vertices[currentPoints].y = windowHeight - y;	// Flip the value due to y starting from top row
+			polygons[currentPolygons].vertices[currentPoints].x = newX;
+			polygons[currentPolygons].vertices[currentPoints].y = newY;
 			// Increment total number of points
 			polygons[currentPolygons].numPoints++;
 			currentPoints++;
@@ -145,7 +156,7 @@ void mouseInput(int button, int state, int x, int y) {
 			}
 		}
 		else {
-			selectedPoint = checkForPoint(polygons, currentPolygons, x, windowHeight - y);
+			selectedPoint = checkForPoint(polygons, currentPolygons, newX, newY);
 		}
 		glutPostRedisplay();
 	}
@@ -168,8 +179,8 @@ void mouseInput(int button, int state, int x, int y) {
 			}
 		}
 		else {
-			selectedPoint->x = x;
-			selectedPoint->y = windowHeight - y;
+			selectedPoint->x = newX;
+			selectedPoint->y = newY;
 		}
 		glutPostRedisplay();
 	}
@@ -202,7 +213,7 @@ int main(int argc, char** argv) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGB);
 	glutInitWindowSize (windowWidth, windowHeight);
-	glutInitWindowPosition (700, 300);
+	glutInitWindowPosition (150, 100);
 	// Window Creation
 	glutCreateWindow("Homework 1");
 	// Function to display
