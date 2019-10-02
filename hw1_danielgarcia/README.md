@@ -20,20 +20,16 @@ Keyboard Inputs:
 	't' = Translation
 	's' = Scale
 	'r' = Rotate
-	'sh' = Shear
+	'h' = Shear
 	'm' = Mirror
 	FORMAT: 
-	|COMMAND| |X| |Y| |ANGLE(only for rotations)|
-	EXAMPLES:
-	't 10 20' == Translate x by 10 and y by 20
-	's 3 5' == Scale x by factor of 3 and y by factor of 5
-	'r 45' == Rotate polygon by 45 degrees
-	'sh 3 5' == Scale x by 
-	
-
+	|COMMAND|
+	|X FACTOR| |Y FACTOR| OR |ANGLE|
 
 Notes:
 -> Red lines indicate non-simple polygons due to intersecting line segments
+-> Scaling is respective to the origin (0,0)
+-> Rotation is respective to the origin (0,0)
 
 WHAT DO THE FILES DO?
 main.c -> The main openGL program. Initializes the window, inputs, and drawings

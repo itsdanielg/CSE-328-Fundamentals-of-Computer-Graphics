@@ -17,8 +17,10 @@ struct Polygon polygons[MAX_POLYGONS];
 char leftClicked = 0;
 char rightClicked = 0;
 char* mode = "Plotting";
+char command[20];
 
 struct Point* selectedPoint = 0;
+struct Polygon* selectedPolygon = 0;
 
 void init(void) {
 	// set background to white
@@ -130,7 +132,6 @@ void display(void) {
 		glEnd();
 	}
 	glutSwapBuffers();
-	
 }
 
 void mouseInput(int button, int state, int x, int y) {
@@ -157,6 +158,7 @@ void mouseInput(int button, int state, int x, int y) {
 		}
 		else {
 			selectedPoint = checkForPoint(polygons, currentPolygons, newX, newY);
+			selectedPolygon = checkForPolygon(polygons, currentPolygons, selectedPoint);
 		}
 		glutPostRedisplay();
 	}
@@ -187,6 +189,9 @@ void mouseInput(int button, int state, int x, int y) {
 }
 
 void keyInput(unsigned char key, int x, int y) {
+	int xVal = 0;
+	int yVal = 0;
+	int angle = 0;
 	switch(key) {
 	case 'd':
 		currentPolygons -= removeNonSimple(polygons);
@@ -202,6 +207,47 @@ void keyInput(unsigned char key, int x, int y) {
 		mode = "Transforming";
 		glutSetCursor(GLUT_CURSOR_CROSSHAIR);
 		selectedPoint = 0;
+		break;
+	case 'q':
+		if (mode != "Transforming") {
+			printf("Please set mode to Transform.\n");
+			break;
+		}
+		if (selectedPolygon == 0) {
+			printf("Please select a polygon by clicking one of its points in Transformation Mode.\n");
+			break;
+		}
+		printf("Enter a transformation command: ");
+		scanf("%s", command);
+		// Translation
+		if (command[0] == 't') {
+			printf("Enter x and y factor: ");
+			scanf("%d %d", &xVal, &yVal);
+			translation(selectedPolygon, xVal, yVal);
+		}
+		// Scale
+		else if (command[0] == 's') {
+			printf("Enter x and y factor: ");
+			scanf("%d %d", &xVal, &yVal);
+			scale(selectedPolygon, xVal, yVal);
+		}
+		// Shear
+		else if (command[0] == 'h') {
+			printf("Enter x and y factor: ");
+			scanf("%d %d", &xVal, &yVal);
+			shear(selectedPolygon, xVal, yVal);
+		}
+		// Rotation with respect to the origin
+		else if (command[0] == 'r') {
+			printf("Enter rotation angle: ");
+			scanf("%d", &angle);
+			rotation(selectedPolygon, angle);
+		}
+		// Reflection over y = -x
+		else if (command[0] == 'm') {
+			reflection(selectedPolygon);
+		}
+		glutPostRedisplay();
 		break;
 	}
 	
