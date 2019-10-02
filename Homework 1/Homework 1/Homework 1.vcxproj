@@ -63,9 +63,12 @@
   <ItemGroup>
     <ClCompile Include="main.c" />
     <ClCompile Include="midpoint.c" />
+    <ClCompile Include="scan.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="midpoint.h" />
+    <ClInclude Include="scan.h" />
+    <ClInclude Include="structs.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -21,9 +21,18 @@
     <ClCompile Include="midpoint.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="scan.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="midpoint.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scan.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="structs.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
