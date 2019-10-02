@@ -1,8 +1,9 @@
 #include <gl/glut.h>
 #include <stdio.h>
+#include "structs.h"
 #include "midpoint.h"
 #include "scan.h"
-#include "structs.h"
+#include "transformation.h"
 
 // Set window size variables
 int windowWidth = 720;
@@ -15,12 +16,9 @@ struct Polygon polygons[MAX_POLYGONS];
 
 char leftClicked = 0;
 char rightClicked = 0;
+char* mode = "Plotting";
 
-int x1;
-int y1;
-int x2;
-int y2;
-
+struct Point* selectedPoint = 0;
 
 void init(void) {
 	// set background to white
@@ -34,6 +32,10 @@ void init(void) {
 void display(void) {
 	int i;
 	int j;
+	int x1;
+	int y1;
+	int x2;
+	int y2;
 	int tempX;
 	int tempY;
 	//Clear the screen and set our initial view matrix
@@ -42,13 +44,21 @@ void display(void) {
 	glLoadIdentity();
 	// Iterate through each polygon
 	for (i = 0; i <= currentPolygons; i++) {
+		// Fill simple polygons
+		glPointSize(1);
+		glColor3d(0.0, 0.0, 255.0);
+		if (polygons[i].isSimple == 1) {
+			//fillPolygon(polygon);
+		}
 		// Draw Lines; Draw only if more than one point exists
 		glPointSize(1);
-		glColor3f(0.0, 0.0, 0.0);
 		// Check for intersections in polygon
 		checkIntersections(&(polygons[i]));
 		if (polygons[i].isSimple == -1) {
 			glColor3f(255.0, 0.0, 0.0);
+		}
+		else {
+			glColor3f(0.0, 0.0, 0.0);
 		}
 		if (i == MAX_POLYGONS) break;
 		currentPoints = polygons[i].numPoints;
@@ -93,13 +103,21 @@ void display(void) {
 		}
 		// Draw Points
 		glPointSize(5);
-		glColor3f(0.0, 1.0, 0.0);
+		glColor3f(0.0, 255.0, 0.0);
 		glBegin(GL_POINTS);
 		for (j = 0; j < currentPoints; j++) {
 			int x = polygons[i].vertices[j].x;
 			int y = polygons[i].vertices[j].y;	
 			glVertex2i(x, y);
 		}
+		glEnd();
+	}
+	// Highlight any selected point if any
+	if (selectedPoint != 0) {
+		glPointSize(10);
+		glColor4f(255.0, 255.0, 0.0, 0.5);
+		glBegin(GL_POINTS);
+		glVertex2i(selectedPoint->x, selectedPoint->y);
 		glEnd();
 	}
 	glutSwapBuffers();
@@ -109,41 +127,50 @@ void display(void) {
 void mouseInput(int button, int state, int x, int y) {
 	// When left click is pressed
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-		// Check if point or polygon limit has been reached
-		if (currentPoints == MAX_POINTS || currentPolygons == MAX_POLYGONS) {
-			return;
+		if (mode == "Plotting") {
+			// Check if point or polygon limit has been reached
+			if (currentPoints == MAX_POINTS || currentPolygons == MAX_POLYGONS) {
+				return;
+			}
+			// Set x,y coordinates of created point
+			polygons[currentPolygons].vertices[currentPoints].x = x;
+			polygons[currentPolygons].vertices[currentPoints].y = windowHeight - y;	// Flip the value due to y starting from top row
+			// Increment total number of points
+			polygons[currentPolygons].numPoints++;
+			currentPoints++;
+			if (currentPoints > 1) {
+				polygons[currentPolygons].lines[polygons[currentPolygons].numLines].a = &polygons[currentPolygons].vertices[currentPoints-2];
+				polygons[currentPolygons].lines[polygons[currentPolygons].numLines].b = &polygons[currentPolygons].vertices[currentPoints-1];
+				polygons[currentPolygons].numLines++;
+			}
 		}
-		// Set x,y coordinates of created point
-		polygons[currentPolygons].vertices[currentPoints].x = x;
-		polygons[currentPolygons].vertices[currentPoints].y = windowHeight - y;	// Flip the value due to y starting from top row
-		// Increment total number of points
-		polygons[currentPolygons].numPoints++;
-		currentPoints++;
-		if (currentPoints > 1) {
-			polygons[currentPolygons].lines[polygons[currentPolygons].numLines].a = polygons[currentPolygons].vertices[currentPoints-2];
-			polygons[currentPolygons].lines[polygons[currentPolygons].numLines].b = polygons[currentPolygons].vertices[currentPoints-1];
-			polygons[currentPolygons].numLines++;
+		else {
+			selectedPoint = checkForPoint(polygons, currentPolygons, x, windowHeight - y);
 		}
 		glutPostRedisplay();
 	}
 	// When right click is pressed
 	else if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN) {
-		currentPoints = polygons[currentPolygons].numPoints;
-		if (currentPoints < 3) {
-			return;
+		if (mode == "Plotting") {
+			currentPoints = polygons[currentPolygons].numPoints;
+			if (currentPoints < 3) {
+				return;
+			}
+			polygons[currentPolygons].complete = 1;
+			polygons[currentPolygons].lines[polygons[currentPolygons].numLines].a = &polygons[currentPolygons].vertices[currentPoints-1];
+			polygons[currentPolygons].lines[polygons[currentPolygons].numLines].b = &polygons[currentPolygons].vertices[0];
+			polygons[currentPolygons].numLines++;
+			polygons[currentPolygons].isSimple = 1;
+			// Start next polygon creation
+			currentPolygons++;
+			if (currentPolygons == MAX_POLYGONS) {
+				return;
+			}
 		}
-		polygons[currentPolygons].complete = 1;
-		polygons[currentPolygons].lines[polygons[currentPolygons].numLines].a = polygons[currentPolygons].vertices[currentPoints-1];
-		polygons[currentPolygons].lines[polygons[currentPolygons].numLines].b = polygons[currentPolygons].vertices[0];
-		polygons[currentPolygons].numLines++;
-		polygons[currentPolygons].isSimple = 1;
-		// Start next polygon creation
-		currentPolygons++;
-		if (currentPolygons == MAX_POLYGONS) {
-			return;
+		else {
+			selectedPoint->x = x;
+			selectedPoint->y = windowHeight - y;
 		}
-		polygons[currentPolygons].numPoints = 0;
-		polygons[currentPolygons].complete = 0;
 		glutPostRedisplay();
 	}
 }
@@ -155,7 +182,18 @@ void keyInput(unsigned char key, int x, int y) {
 		rearrangeArr(polygons, currentPolygons);
 		glutPostRedisplay();
 		break;
+	case 'p':
+		mode = "Plotting";
+		glutSetCursor(GLUT_CURSOR_RIGHT_ARROW);
+		selectedPoint = 0;
+		break;
+	case 't':
+		mode = "Transforming";
+		glutSetCursor(GLUT_CURSOR_CROSSHAIR);
+		selectedPoint = 0;
+		break;
 	}
+	
 }
 
 // Entry point - GLUT setup and initialization

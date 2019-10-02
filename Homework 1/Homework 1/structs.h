@@ -7,8 +7,8 @@ struct Point {
 };
 
 struct Line {
-	struct Point a;
-	struct Point b;
+	struct Point* a;
+	struct Point* b;
 };
 
 struct Polygon {

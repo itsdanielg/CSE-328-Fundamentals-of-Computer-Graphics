@@ -61,7 +61,6 @@ int midpointAlg(int x1, int y1, int x2, int y2) {
 			// Draw the last pixel in the line
 			glVertex2i(x2, y2);
 		}
-
 	}
 	else {
 		// Positive slope larger than 1
@@ -107,6 +106,5 @@ int midpointAlg(int x1, int y1, int x2, int y2) {
 			glVertex2i(x2, y2);
 		}
 	}
-	
 	return 0;
 }

@@ -1,0 +1,1 @@
+struct Point* checkForPoint(struct Polygon polygons[], int currentPolygons, int x, int y);

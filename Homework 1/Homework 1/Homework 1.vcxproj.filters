@@ -24,6 +24,9 @@
     <ClCompile Include="scan.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="transformation.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="midpoint.h">
@@ -33,6 +36,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="structs.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="transformation.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
