@@ -57,14 +57,16 @@ void display(void) {
 	for (i = 0; i <= currentPolygons; i++) {
 		// Fill simple polygons
 		glPointSize(1);
-		glColor3d(0.0, 0.0, 255.0);
-		if (polygons[i].isSimple == 1) {
-			//fillPolygon(polygon);
+		glColor3d(255.0, 128.0, 0.0);
+		checkIntersections(&(polygons[i]));
+		if (polygons[i].isSimple == 1 && polygons[i].complete == 1) {
+			glBegin(GL_POINTS);
+			fillPolygon(polygons[i]);
+			glEnd();
 		}
 		// Draw Lines; Draw only if more than one point exists
 		glPointSize(1);
 		// Check for intersections in polygon
-		checkIntersections(&(polygons[i]));
 		if (polygons[i].isSimple == -1) {
 			glColor3f(255.0, 0.0, 0.0);
 		}

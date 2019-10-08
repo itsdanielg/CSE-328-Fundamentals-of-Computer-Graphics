@@ -1,5 +1,7 @@
-#include "structs.h"
 #include <string.h>
+#include <gl/glut.h>
+#include "structs.h"
+#include "midpoint.h"
 
 // Helper function to find the max value between two integers
 int max(int a, int b) { 
@@ -18,6 +20,25 @@ int min(int a, int b) {
 	}
 	else {
 		return a;
+	}
+}
+
+// Helper function to swap two array integers
+void swap(int* x1, int* x2) {
+	int temp = *x1;  
+    *x1 = *x2;  
+    *x2 = temp;  
+}
+
+void sort(int total, int intArray[]) {
+	int i;
+	int j;
+	for (i = 0; i < total - 1; i++) {
+		for (j = 0; j < total - i - 1; j++) {
+			if (intArray[j] > intArray[j+1]) {
+				swap(&intArray[j], &intArray[j+1]); 
+			}
+		}
 	}
 }
 
@@ -152,3 +173,148 @@ void rearrangeArr(struct Polygon polygons[], int currentPolygons) {
 		}
 	}
 }
+
+int findIntersection(struct Line scanLine, struct Line polyLine) {
+	int determinant;
+	int a1 = scanLine.b->y - scanLine.a->y;
+	int b1 = scanLine.a->x - scanLine.b->x;
+	int c1 = a1 * scanLine.a->x + b1 * scanLine.a->y;
+	int a2 = polyLine.b->y - polyLine.a->y;
+	int b2 = polyLine.a->x - polyLine.b->x;
+	int c2 = a2 * polyLine.a->x + b2 * polyLine.a->y;
+	if (isIntersecting(scanLine.a, scanLine.b, polyLine.a, polyLine.b) == -1) {
+		return -2000;
+	}
+	determinant = a1 * b2 - a2 * b1;
+	if (determinant == 0) {
+		return -2000;
+	}
+	return (int) ((b2 * c1 - b1 * c2) / determinant);
+}
+
+int specialCase(struct Polygon polygon, int xIntersect, int yIntersect) {
+	int i;
+	int y1 = 9999;
+	int y2 = 9999;
+	for (i = 0; i < polygon.numLines; i++) {
+		if (polygon.lines[i].a->x == xIntersect) {
+			if (y1 == 9999) {
+				y1 = polygon.lines[i].b->y;
+			}
+			else {
+				y2 = polygon.lines[i].b->y;
+				break;
+			}
+		}
+		else if (polygon.lines[i].b->x == xIntersect) {
+			if (y1 == 9999) {
+				y1 = polygon.lines[i].a->y;
+			}
+			else {
+				y2 = polygon.lines[i].a->y;
+				break;
+			}
+		}
+	} 
+	// General Case; Only intersecting point in line
+	if (y2 == 9999) {
+		return -1;
+	}
+	// Same Side
+	if ((y1 < yIntersect && y2 < yIntersect) || 
+		(y1 > yIntersect && y2 > yIntersect)) {
+			return 1;
+	}
+	// Else, different side
+	else {
+		return 0;
+	}
+}
+
+void fillPolygon(struct Polygon polygon) {
+	int i;
+	int j;
+	int k;
+	int xIntersect;
+	int check;
+	int intersectionPoints[MAX_POINTS];
+	struct Point scanLineEndpoints[2];
+	struct Line scanLine;
+	int yMin = 800;
+	int yMax = -800;
+	int totalIntersects = 0;
+	int removeInts = 0;
+	// Find the min and max y-value of the polygon
+	for (i = 0; i < polygon.numPoints; i++) {
+		if (polygon.vertices[i].y < yMin) {
+			yMin = polygon.vertices[i].y;
+		}
+		if (polygon.vertices[i].y > yMax) {
+			yMax = polygon.vertices[i].y;
+		}
+	}
+	// Start scan lines from bottom of polygon
+	for (i = yMin; i < yMax; i++) {
+		totalIntersects = 0;
+		removeInts = 0;
+		memset(intersectionPoints, 0, sizeof(intersectionPoints));
+		// Setup scan line
+		scanLineEndpoints[0].x = -450;
+		scanLineEndpoints[0].y = i;
+		scanLineEndpoints[1].x = 450;
+		scanLineEndpoints[1].y = i;
+		scanLine.a = &scanLineEndpoints[0];
+		scanLine.b = &scanLineEndpoints[1];
+		// Find intersection points
+		for (j = 0; j < polygon.numLines; j++) {
+			xIntersect = findIntersection(scanLine, polygon.lines[j]);
+			if (xIntersect != -2000) {
+				/*if (xIntersect == intersectionPoints[totalIntersects - 1]) {
+					check = specialCase(polygon, xIntersect, i);
+					if (check == 1) {
+						intersectionPoints[totalIntersects] = xIntersect;
+						totalIntersects++;
+					}
+				}
+				else if (xIntersect == intersectionPoints[0]) {
+					if (check == 1) {
+						intersectionPoints[totalIntersects] = xIntersect;
+						totalIntersects++;
+					}
+				}
+				else {
+					intersectionPoints[totalIntersects] = xIntersect;
+					totalIntersects++;
+				}*/
+				intersectionPoints[totalIntersects] = xIntersect;
+				totalIntersects++;
+			}
+		}
+		if (totalIntersects < 2) {
+			continue;
+		}
+		// Sort intersecting points by x value
+		sort(totalIntersects, intersectionPoints);
+		// Check for special cases
+		for (j = 1; j < totalIntersects; j++) {
+			if (intersectionPoints[j] == intersectionPoints[j-1]) {
+				check = specialCase(polygon, intersectionPoints[j], i);
+				if (check == 0) {
+					removeInts++;
+					for (k = j; k < totalIntersects - 1; k++) {
+						intersectionPoints[k] = intersectionPoints[k+1];
+					}
+					intersectionPoints[k+1] = -2000;
+				}
+			}
+		}
+		totalIntersects -= removeInts;
+		// Fill all pairs
+		for (j = 0; j < totalIntersects; j = j + 2) {
+			for (k = intersectionPoints[j]; k < intersectionPoints[j+1]; k++) {
+				glVertex2i(k, i);
+			}
+		}
+	}
+}
+

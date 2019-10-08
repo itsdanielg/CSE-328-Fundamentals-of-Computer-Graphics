@@ -54,8 +54,8 @@ void rotation(struct Polygon* polygon, int angle) {
 	int temp;
 	for (i = 0; i < polygon->numPoints; i++) {
 		temp = polygon->vertices[i].x;
-		polygon->vertices[i].x = polygon->vertices[i].x * COS(angle) - polygon->vertices[i].y * SIN(angle);
-		polygon->vertices[i].y = temp * SIN(angle) + polygon->vertices[i].y * COS(angle);
+		polygon->vertices[i].x = (int) polygon->vertices[i].x * COS(angle) - polygon->vertices[i].y * SIN(angle);
+		polygon->vertices[i].y = (int) temp * SIN(angle) + polygon->vertices[i].y * COS(angle);
 	}
 }
 
