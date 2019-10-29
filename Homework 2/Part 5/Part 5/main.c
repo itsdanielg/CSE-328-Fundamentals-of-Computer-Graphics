@@ -1,6 +1,7 @@
 #include <GL/glut.h>
 #include <math.h>
 
+// Define icosahedron vertices to be 1 unit away from origin
 #define X .525731112119133606
 #define Z .850650808352039932
 
@@ -10,15 +11,19 @@ float aspectRatio;
 float *v1;
 float *v2;
 float *v3;
+float yLook = 0;
+int direction = 0;
 
 void drawTriangle(float *v1, float *v2, float *v3, float offset, int xRad, int yRad, int zRad);
 void subdivide(float *v1, float *v2, float *v3, long depth, float offset, int xRad, int yRad, int zRad);
 void normalize(float v[3]);
 
 void init(void) {
+	// Set aspect ratio
 	aspectRatio =  (float)windowWidth/windowHeight;
 	glClearColor(1.0, 1.0, 1.0, 0.0);
 	glMatrixMode(GL_PROJECTION);
+	// Set perspective viewpoint
 	gluPerspective(90, aspectRatio, 0.001, 1000.0);
 	glMatrixMode(GL_MODELVIEW);
 }
@@ -27,13 +32,15 @@ void display(void) {
 
 	int i;
 
+	// Initialize vertices
 	GLfloat vdata[12][3] = {
 		{-X, 0.0, Z}, {X, 0.0, Z}, {-X, 0.0, -Z}, {X, 0.0, -Z},
 		{0.0, Z, X}, {0.0, Z, -X}, {0.0, -Z, X}, {0.0, -Z, -X},
 		{Z, X, 0.0}, {-Z, X, 0.0}, {Z, -X, 0.0}, {-Z, -X, 0.0}
 	};
 
-	static GLuint icosahedron[20][3] = {
+	// Initialize vertex indeces
+	GLuint icosahedron[20][3] = {
 		{1, 4, 0}, {4, 9, 0}, {4, 5, 9}, {8, 5, 4}, {1, 8, 4},
 		{1, 10, 8}, {10, 3, 8}, {8, 3, 5}, {3, 2, 5}, {3, 7, 2},
 		{3, 10, 7}, {10, 6, 7}, {6, 11, 7}, {6, 0, 11}, {6, 1, 0},
@@ -44,8 +51,9 @@ void display(void) {
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	// Set camera position and look at origin
-	gluLookAt(1.0, 4.0, 6.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+	gluLookAt(0.0, yLook, 7.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 	
+	// Display polygons
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glBegin(GL_TRIANGLES);
 	glColor3f(1.0, 0.0, 1.0);
@@ -53,15 +61,33 @@ void display(void) {
 		v1 = &vdata[icosahedron[i][0]][0];
 		v2 = &vdata[icosahedron[i][1]][0];
 		v3 = &vdata[icosahedron[i][2]][0];
-		subdivide(v1, v2, v3, 0, -5, 3, 2, 1);
-		subdivide(v1, v2, v3, 1, 0, 2, 4, 1);
-		subdivide(v1, v2, v3, 2, 7, 4, 2, 3);
+		subdivide(v1, v2, v3, 0, -6, 3, 2, 1);		// 20-triangle ellipsoid
+		subdivide(v1, v2, v3, 1, 0, 2, 4, 1);		// 80-triangle ellipsoid
+		subdivide(v1, v2, v3, 2, 7, 4, 2, 3);		// 320-triangle ellipsoid
 	}
 	glEnd();
 
-	glFlush();
+	glutSwapBuffers();
 }
 
+// Function to animate camera for better view at objects
+void idle() {
+	if (direction == 0) {
+		yLook += 0.01;
+		if (yLook >= 6) {
+			direction = 1;
+		}
+	}
+	else {
+		yLook -= 0.01;
+		if (yLook <= -6) {
+			direction = 0;
+		}
+	}
+	glutPostRedisplay();
+}
+
+// Function to draw single triangle for ellipsoids
 void drawTriangle(float *v1, float *v2, float *v3, float offset, int xRad, int yRad, int zRad) {
 	float one[3] = {v1[0] * xRad + offset, v1[1] * yRad, v1[2] * zRad};
 	float two[3] = {v2[0] * xRad + offset, v2[1] * yRad, v2[2] * zRad};
@@ -77,6 +103,7 @@ void drawTriangle(float *v1, float *v2, float *v3, float offset, int xRad, int y
 	glVertex3fv(three);
 }
 
+// Function to divide icosahedron; Offset translates these vertices
 void subdivide(float *v1, float *v2, float *v3, long depth, float offset, int xRad, int yRad, int zRad) {
 	GLfloat v12[3], v23[3], v31[3];
 	GLint i;
@@ -98,6 +125,7 @@ void subdivide(float *v1, float *v2, float *v3, long depth, float offset, int xR
 	subdivide(v12, v23, v31, depth-1, offset, xRad, yRad, zRad);
 }
 
+// Function to normalize vector
 void normalize(float v[3]) {
 	GLfloat d = sqrt(v[0] * v[0] + v[1]  * v[1] + v[2] * v[2]);
 	if (d == 0.0) {
@@ -110,7 +138,7 @@ void normalize(float v[3]) {
 
 void main(int argc, char** argv) {
 	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
 	glutInitWindowPosition(100, 100);
 	glutInitWindowSize(windowWidth, windowHeight);
 	glutCreateWindow("Homework 2 (Part 5)");
@@ -118,6 +146,7 @@ void main(int argc, char** argv) {
 	init();
 
 	glutDisplayFunc(display);
+	glutIdleFunc(idle);
 
 	glutMainLoop();
 }

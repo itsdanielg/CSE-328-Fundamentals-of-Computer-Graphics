@@ -8,6 +8,7 @@
 
 GLuint startList;
 
+// Function for callback error
 void CALLBACK errorCallback(GLenum errorCode) {
 	const GLubyte* estring;
 	estring = gluErrorString(errorCode);
@@ -17,12 +18,15 @@ void CALLBACK errorCallback(GLenum errorCode) {
 
 void init(void) {
 	GLUquadricObj* qobj;
+	
+	// Set lighting
 	GLfloat mat_ambient[] = {0.5, 0.5, 0.5, 1.0};
 	GLfloat mat_specular[] = {1.0, 1.0, 1.0, 1.0};
 	GLfloat mat_shininess[] = {50.0};
 	GLfloat light_position[] = {1.0, 1.0, 1.0, 0.0};
 	GLfloat model_ambient[] = {0.5, 0.5, 0.5, 1.0};
 
+	// Set black background
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 
 	glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
@@ -35,22 +39,26 @@ void init(void) {
 	glEnable(GL_LIGHT0);
 	glEnable(GL_DEPTH_TEST);
 
+	// Create display list for objects
 	startList = glGenLists(4);
 	qobj = gluNewQuadric();
 	gluQuadricCallback(qobj, GLU_ERROR, errorCallback);
 
+	// Initialize sphere as solid
 	gluQuadricDrawStyle(qobj, GLU_FILL);
 	gluQuadricNormals(qobj, GLU_SMOOTH);
 	glNewList(startList+1, GL_COMPILE);
 	gluSphere(qobj, 1, 50, 50);
 	glEndList();
 
+	// Intialize cylinder as solid
 	gluQuadricDrawStyle(qobj, GLU_FILL);
 	gluQuadricNormals(qobj, GLU_FLAT);
 	glNewList(startList+2, GL_COMPILE);
 	gluCylinder(qobj, 0.7, 0.7, 1.5, 25, 25);
 	glEndList();
 
+	// Initialize cone as wireframe
 	gluQuadricDrawStyle(qobj, GLU_LINE);
 	gluQuadricNormals(qobj, GLU_SMOOTH);
 	glNewList(startList+3, GL_COMPILE);
@@ -64,10 +72,10 @@ void display(void) {
 	glPushMatrix();
 
 	glEnable(GL_LIGHTING);
-	glShadeModel(GL_SMOOTH);
 	glTranslatef(-1.0, -1.0, 0.0);
 	glCallList(startList);
 
+	// Set flat lighting for sphere
 	glShadeModel(GL_FLAT);
 	glTranslatef(0.0, 2.0, 0.0);
 	glPushMatrix();
@@ -75,12 +83,15 @@ void display(void) {
 	glCallList(startList+1);
 	glPopMatrix();
 
+	// Set flat lighting for cylinder
+	glPushMatrix();
 	glShadeModel(GL_FLAT);
 	glColor3f(0.0, 1.0, 1.0);
 	glTranslatef(1.0, -2.7, 0.0);
 	glRotatef(300.0, 1.0, 0.0, 0.0);
 	glCallList(startList+2);
 
+	// Set smooth lighting for cone
 	glShadeModel(GL_SMOOTH);
 	glColor3f(1.0, 1.0, 0.0);
 	glTranslatef(1.2, 4.5, 0.0);

@@ -5,16 +5,17 @@ GLsizei windowHeight = 900;
 float aspectRatio;
 
 void init(void) {
+	// Set aspect ratio
 	aspectRatio = (float) windowWidth / windowHeight;
 	glClearColor(1.0, 1.0, 1.0, 0.0);
 	glMatrixMode(GL_PROJECTION);
+	// Set perspective viewpoint
 	gluPerspective(90, aspectRatio, 0.001, 1000.0);
 	glMatrixMode(GL_MODELVIEW);
 }
 
 void display(void) {
 	glClear(GL_COLOR_BUFFER_BIT);
-	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	// Set camera position and look at origin
 	gluLookAt(2.0, 10.0, 10.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);

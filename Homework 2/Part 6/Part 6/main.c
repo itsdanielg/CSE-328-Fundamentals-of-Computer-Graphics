@@ -17,6 +17,7 @@ float yRotate = 0;
 float zRotate = 0;
 float status;
 
+// Function to draw torus and its normals
 void drawTorus(float innerRadius, float outerRadius, int nsides, int rings) {
    int i, j, k;
    float s, t;
@@ -41,6 +42,7 @@ void drawTorus(float innerRadius, float outerRadius, int nsides, int rings) {
 }
 
 void init(void) {
+	// Set lighting
 	GLfloat mat_ambient[] = {0.5, 0.5, 0.5, 1.0};
 	GLfloat mat_specular[] = {1.0, 1.0, 1.0, 1.0};
 	GLfloat mat_shininess[] = {50.0};
@@ -57,11 +59,13 @@ void init(void) {
 	glEnable(GL_LIGHT0);
 	glEnable(GL_DEPTH_TEST);
 	
+	// Create display list for torus
 	torusObject = glGenLists(1);
 	glNewList(torusObject, GL_COMPILE);
 	drawTorus(0.5, 2, 32, 32);
 	glEndList();
 
+	// Set black background with smooth lighting
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	glShadeModel(GL_SMOOTH);
 }
@@ -70,13 +74,15 @@ void display(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glPushMatrix();
 
-	// Make Torus
+	// Switch between wireframe and solid
 	if (status < 180) {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	}
 	else {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
+
+	// Make torus
 	glColor3f(1.0, 1.0, 1.0);
 	glRotatef(xRotate, 1.0, 0.0, 0.0);
 	glRotatef(yRotate, 0.0, 1.0, 0.0);
@@ -87,6 +93,7 @@ void display(void) {
 	glutSwapBuffers();
 }
 
+// Animate camera
 void idle() {
 	status += 0.2;
 	xRotate += 0.1;
