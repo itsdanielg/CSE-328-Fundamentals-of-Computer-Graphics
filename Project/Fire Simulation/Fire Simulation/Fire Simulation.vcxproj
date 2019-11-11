@@ -61,15 +61,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="firesystem.cpp" />
     <ClCompile Include="gui.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="particle.cpp" />
+    <ClCompile Include="particle.h" />
     <ClCompile Include="particlesystem.cpp" />
-    <ClCompile Include="point.cpp" />
+    <ClCompile Include="point.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="firesystem.h" />
     <ClInclude Include="globalvar.h" />
     <ClInclude Include="gui.h" />
+    <ClInclude Include="particlesystem.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

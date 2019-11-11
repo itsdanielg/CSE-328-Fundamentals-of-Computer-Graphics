@@ -4,32 +4,32 @@
 int sysStatus = 1;
 
 ////////// SYSTEM VARIABLES //////////
-int debugLevel = 0;
-int frameCount = 0;
-float emitterRadius = 2.0;
-float emitterRate = 400.0;
-float timingStepsPerSec = 46.0;
-float timingFramesPerSec = 24.0;
-float fireCoolRate = 0.4;
-float fireRiseRate = 0.6;
-float fireTurbulenceAmp = 1.2;
-float fireTurbulenceScale = 0.35;
-float fireWindX = 5.50;
-float fireWindY = 0.00;
-float fireWindZ = 0.00;
-float cameraPosX = 0.00;
-float cameraPosY = 0.00;
-float cameraPosZ = 10.00;
-float cameraLookAtX = 0.00;
-float cameraLookAtY = 0.00;
-float cameraLookAtZ = 0.00;
-float cameraFOV = 90.0;
-float cameraAspect = (float)1600/950;
-float cameraNear = 0.001;
-float cameraFar = 100.0;
-int programDrawParticles = 1;
-int programWriteParticles = 0;
-int programWriteRenders = 0;
+int debugLevel;
+int frameCount;
+float emitterRadius;
+float emitterRate;
+int timingStepsPerSec;
+int timingFramesPerSec;
+float fireCoolRate;
+float fireRiseRate;
+float fireTurbulenceAmp;
+float fireTurbulenceScale;
+float fireWindX;
+float fireWindY;
+float fireWindZ;
+float cameraPosX;
+float cameraPosY;
+float cameraPosZ;
+float cameraLookAtX;
+float cameraLookAtY;
+float cameraLookAtZ;
+float cameraFOV;
+float cameraAspect;
+float cameraNear;
+float cameraFar;
+int programDrawParticles;
+int programWriteParticles;
+int programWriteRenders;
 char programParticleFilename[] = "./frames/parts-";
 char programRenderFilename[] = "./frames/rends-";
 
@@ -75,25 +75,24 @@ GLUI_Button* stopButton;
 GLUI_Button* resetButton;
 GLUI_Button* quitButton;
 
-void defaultCallback() {
+void resetVar() {
 	debugLevel = 0;
-	frameCount = 0;
-	emitterRadius = 2.0;
-	emitterRate = 400.0;
-	timingStepsPerSec = 46.0;
-	timingFramesPerSec = 24.0;
-	fireCoolRate = 0.4;
-	fireRiseRate = 0.6;
-	fireTurbulenceAmp = 1.2;
+	emitterRadius = 1.0;
+	emitterRate = 25.0;
+	timingStepsPerSec = 24;
+	timingFramesPerSec = 24;
+	fireCoolRate = 1.0;
+	fireRiseRate = 1.0;
+	fireTurbulenceAmp = 0.1;
 	fireTurbulenceScale = 0.35;
-	fireWindX = 5.50;
-	fireWindY = 0.00;
-	fireWindZ = 0.00;
-	cameraPosX = 0.00;
-	cameraPosY = 0.00;
+	fireWindX = 0.0;
+	fireWindY = 0.0;
+	fireWindZ = 0.0;
+	cameraPosX = -1.00;
+	cameraPosY = 5.00;
 	cameraPosZ = 10.00;
-	cameraLookAtX = 0.00;
-	cameraLookAtY = 0.00;
+	cameraLookAtX = -1.00;
+	cameraLookAtY = 5.00;
 	cameraLookAtZ = 0.00;
 	cameraFOV = 90.0;
 	cameraAspect = (float)1600/950;
@@ -102,12 +101,16 @@ void defaultCallback() {
 	programDrawParticles = 1;
 	programWriteParticles = 0;
 	programWriteRenders = 0;
+}
+
+void defaultCallback() {
+	resetVar();
 	glui->sync_live();
 }
 
 void updateReset() {
 	frameCount = 0;
-	particleSystem.resetSystem();
+	fireSystem.resetSystem();
 }
 
 void startSys() {
@@ -147,8 +150,8 @@ void initGlui() {
 	emitterRadiusSpinner = glui->add_spinner_to_panel(emitterPanel, "Radius", GLUI_SPINNER_FLOAT, &emitterRadius);
 	emitterRateSpinner = glui->add_spinner_to_panel(emitterPanel, "Rate", GLUI_SPINNER_FLOAT, &emitterRate);
 	timingPanel = glui->add_panel_to_panel(particleSettingsRollout, "Timing", GLUI_PANEL_EMBOSSED);
-	timingTimeStepsSpinner = glui->add_spinner_to_panel(timingPanel, "Time Steps Per Second", GLUI_SPINNER_FLOAT, &timingStepsPerSec);
-	timingFramesSpinner = glui->add_spinner_to_panel(timingPanel, "Frames Per Second", GLUI_SPINNER_FLOAT, &timingFramesPerSec);
+	timingTimeStepsSpinner = glui->add_spinner_to_panel(timingPanel, "Time Steps Per Second", GLUI_SPINNER_INT, &timingStepsPerSec);
+	timingFramesSpinner = glui->add_spinner_to_panel(timingPanel, "Frames Per Second", GLUI_SPINNER_INT, &timingFramesPerSec);
 	fireSettingsRollout = glui->add_rollout_to_panel(particleSettingsRollout, "Fire Settings", true);
 	fireCoolRateSpinner = glui->add_spinner_to_panel(fireSettingsRollout, "Cool Rate", GLUI_SPINNER_FLOAT, &fireCoolRate);
 	fireRiseRateSpinner = glui->add_spinner_to_panel(fireSettingsRollout, "Rise Rate", GLUI_SPINNER_FLOAT, &fireRiseRate);
@@ -184,9 +187,8 @@ void initGlui() {
 }
 
 void adjustGlui() {
-	float speed = 0.5;
+	float speed = 0.1;
 	frameCountEdit->disable();
-	debugLevelSpinner->set_int_limits(0, 1, GLUI_LIMIT_CLAMP);
 	emitterRadiusSpinner->set_speed(speed);
 	emitterRateSpinner->set_speed(speed);
 	timingTimeStepsSpinner->set_speed(speed);
@@ -208,5 +210,17 @@ void adjustGlui() {
 	cameraAspectSpinner->set_speed(speed);
 	cameraNearSpinner->set_speed(speed);
 	cameraFarSpinner->set_speed(speed);
+	debugLevelSpinner->set_int_limits(0, 1, GLUI_LIMIT_CLAMP);
+	emitterRadiusSpinner->set_float_limits(0.01, 10.0, GLUI_LIMIT_CLAMP);
+	emitterRateSpinner->set_float_limits(0.01, 50.0, GLUI_LIMIT_CLAMP);
+	timingTimeStepsSpinner->set_int_limits(1, 120, GLUI_LIMIT_CLAMP);
+	timingFramesSpinner->set_int_limits(1, 60, GLUI_LIMIT_CLAMP);
+	fireCoolRateSpinner->set_float_limits(0.01, 1.0, GLUI_LIMIT_CLAMP);
+	fireRiseRateSpinner->set_float_limits(0.01, 10.0, GLUI_LIMIT_CLAMP);
+	fireTurbulenceAmpSpinner->set_float_limits(0.0, 5.0, GLUI_LIMIT_CLAMP);
+	fireTurbulenceScaleSpinner->set_float_limits(0.0, 5.0, GLUI_LIMIT_CLAMP);
+	fireWindXSpinner->set_float_limits(-10.0, 10.0, GLUI_LIMIT_CLAMP);
+	fireWindYSpinner->set_float_limits(-10.0, 10.0, GLUI_LIMIT_CLAMP);
+	fireWindZSpinner->set_float_limits(-10.0, 10.0, GLUI_LIMIT_CLAMP);
 }
 

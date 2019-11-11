@@ -1,4 +1,10 @@
-#include "particlesystem.cpp"
+#pragma once
+
+#ifndef GLOBALVAR_H
+#define GLOBALVAR_H
+
+#include <GL/glui.h>
+#include "firesystem.h"
 
 ////////// CALLBACK IDs //////////
 #define SET_DEFAULT_ID	100
@@ -20,8 +26,8 @@ extern int debugLevel;
 extern int frameCount;
 extern float emitterRadius;
 extern float emitterRate;
-extern float timingStepsPerSec;
-extern float timingFramesPerSec;
+extern int timingStepsPerSec;
+extern int timingFramesPerSec;
 extern float fireCoolRate;
 extern float fireRiseRate;
 extern float fireTurbulenceAmp;
@@ -46,7 +52,17 @@ extern char programParticleFilename[];
 extern char programRenderFilename[];
 
 ////////// PARTICLE VARIABLES //////////
-extern ParticleSystem particleSystem;
+extern FireSystem fireSystem;
+extern float emissionXMin;
+extern float emissionXMax;
+extern float emissionYMin;
+extern float emissionYMax;
+extern float emissionZMin;
+extern float emissionZMax;
+extern float minVel;
+extern float maxVel;
+extern float maxTemp;
+extern float maxLifespan;
 
 ////////// GUI CONTROLS //////////
 extern GLUI *glui;
@@ -89,3 +105,5 @@ extern GLUI_Button* startButton;
 extern GLUI_Button* stopButton;
 extern GLUI_Button* resetButton;
 extern GLUI_Button* quitButton;
+
+#endif

@@ -1,3 +1,5 @@
+#pragma once
+
 #include <GL/glui.h>
 #include <GL/glut.h>
 #include "globalvar.h"
@@ -10,28 +12,20 @@ int windowHeight = 950;
 float aspectRatio = aspectRatio = (float) windowWidth / windowHeight;
 int windowPosX = (1920 - windowWidth) / 2;
 int windowPosY = (1080 - windowHeight) / 2;
-ParticleSystem particleSystem;
+FireSystem fireSystem;
 
-int timeCounter = 0;
+int stepCounter = 0;
+int frameCounter = 0;
 
 void init() {
-	glClearColor(1.0, 1.0, 1.0, 0.0);
+	glClearColor(0.0, 0.0, 0.0, 0.0);
 	glEnable(GL_DEPTH_TEST);
 }
 
 void display() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	if (sysStatus == 1) {
-		
-		particleSystem.drawScene();
-		
-
-		glEnd();
-
-		glutSwapBuffers();
-	}
-	
+	fireSystem.drawScene();
+	glutSwapBuffers();
 }
 
 void reshape(int width, int height) {
@@ -45,7 +39,7 @@ void reshape(int width, int height) {
 		windowHeight = 950;
 		glutReshapeWindow(windowWidth, windowHeight);
 	}
-	glViewport(0, 0, (GLsizei) windowWidth, (GLsizei) windowHeight);
+	glViewport(0, 0, (GLsizei)windowWidth, (GLsizei)windowHeight);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluPerspective(cameraFOV, cameraAspect, cameraNear, cameraFar);
@@ -59,21 +53,25 @@ void idle() {
 		glutSetWindow(mainWindow);
 	}
 	if (sysStatus == 1) {
-		timeCounter++;
-		if (timeCounter > 10) {
+		stepCounter++;
+		frameCounter++;
+		if (stepCounter > 333/timingStepsPerSec) {
+			fireSystem.step();
+			stepCounter = 0;
+		}
+		if (frameCounter > 333/timingFramesPerSec) {
 			frameCount++;
 			glui->sync_live();
-			timeCounter = 0;
-			particleSystem.step();
+			frameCounter = 0;
 		}
-		reshape(windowWidth, windowHeight);
-		glutPostRedisplay();
 	}
-	
+	reshape(windowWidth, windowHeight);
+	glutPostRedisplay();
 }
 
 void main(int argc, char** argv) {
 	glutInit(&argc, argv);
+
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
 	glutInitWindowPosition(windowPosX, windowPosY);
 	glutInitWindowSize(windowWidth, windowHeight);
@@ -84,8 +82,11 @@ void main(int argc, char** argv) {
 	GLUI_Master.set_glutIdleFunc(idle);
 	
 	init();
+	resetVar();
 	initGlui();
 	adjustGlui();
+
+	fireSystem.resetSystem();
 
 	glutMainLoop();
 }
