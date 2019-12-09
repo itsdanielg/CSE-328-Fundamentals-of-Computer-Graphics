@@ -11,10 +11,10 @@ class FireSystem : public ParticleSystem {
 public:
 
 	void changeColor(Particle* particle);
-	void calculateTurbulence(Particle* particle);
+	void calculateTurbulence(Particle* particle, int deltaTime);
 	void createParticles();
-	void modifyParticles();
-	void step();
+	void modifyParticles(int deltaTime);
+	void step(int deltaTime);
 
 };
 

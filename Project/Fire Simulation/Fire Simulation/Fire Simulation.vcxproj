@@ -64,6 +64,7 @@
     <ClCompile Include="firesystem.cpp" />
     <ClCompile Include="gui.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="noise.cpp" />
     <ClCompile Include="particle.h" />
     <ClCompile Include="particlesystem.cpp" />
     <ClCompile Include="point.h" />
@@ -72,6 +73,7 @@
     <ClInclude Include="firesystem.h" />
     <ClInclude Include="globalvar.h" />
     <ClInclude Include="gui.h" />
+    <ClInclude Include="noise.h" />
     <ClInclude Include="particlesystem.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

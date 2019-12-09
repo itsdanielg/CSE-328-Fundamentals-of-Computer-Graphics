@@ -82,15 +82,15 @@ void resetVar() {
 	timingStepsPerSec = 24;
 	timingFramesPerSec = 24;
 	fireCoolRate = 1.0;
-	fireRiseRate = 1.0;
-	fireTurbulenceAmp = 0.1;
-	fireTurbulenceScale = 0.35;
+	fireRiseRate = 0.01;
+	fireTurbulenceAmp = 0.5;
+	fireTurbulenceScale = 8.0;
 	fireWindX = 0.0;
 	fireWindY = 0.0;
 	fireWindZ = 0.0;
 	cameraPosX = -1.00;
 	cameraPosY = 5.00;
-	cameraPosZ = 10.00;
+	cameraPosZ = 10.0;
 	cameraLookAtX = -1.00;
 	cameraLookAtY = 5.00;
 	cameraLookAtZ = 0.00;
@@ -198,7 +198,7 @@ void adjustGlui() {
 	fireTurbulenceAmpSpinner->set_speed(speed);
 	fireTurbulenceScaleSpinner->set_speed(speed);
 	fireWindXSpinner->set_speed(speed);
-	fireWindYSpinner->set_speed(speed);
+	fireWindYSpinner->set_speed(speed * 0.1);
 	fireWindZSpinner->set_speed(speed);
 	cameraXPosSpinner->set_speed(speed);
 	cameraYPosSpinner->set_speed(speed);
@@ -215,12 +215,12 @@ void adjustGlui() {
 	emitterRateSpinner->set_float_limits(0.01, 50.0, GLUI_LIMIT_CLAMP);
 	timingTimeStepsSpinner->set_int_limits(1, 120, GLUI_LIMIT_CLAMP);
 	timingFramesSpinner->set_int_limits(1, 60, GLUI_LIMIT_CLAMP);
-	fireCoolRateSpinner->set_float_limits(0.01, 1.0, GLUI_LIMIT_CLAMP);
-	fireRiseRateSpinner->set_float_limits(0.01, 10.0, GLUI_LIMIT_CLAMP);
-	fireTurbulenceAmpSpinner->set_float_limits(0.0, 5.0, GLUI_LIMIT_CLAMP);
-	fireTurbulenceScaleSpinner->set_float_limits(0.0, 5.0, GLUI_LIMIT_CLAMP);
-	fireWindXSpinner->set_float_limits(-10.0, 10.0, GLUI_LIMIT_CLAMP);
-	fireWindYSpinner->set_float_limits(-10.0, 10.0, GLUI_LIMIT_CLAMP);
+	fireCoolRateSpinner->set_float_limits(0.001, 1.0, GLUI_LIMIT_CLAMP);
+	fireRiseRateSpinner->set_float_limits(0.001, 1.0, GLUI_LIMIT_CLAMP);
+	fireTurbulenceAmpSpinner->set_float_limits(0.0, 10.0, GLUI_LIMIT_CLAMP);
+	fireTurbulenceScaleSpinner->set_float_limits(0.0, 10.0, GLUI_LIMIT_CLAMP);
+	fireWindXSpinner->set_float_limits(-1.0, 1.0, GLUI_LIMIT_CLAMP);
+	fireWindYSpinner->set_float_limits(-1.0, 1.0, GLUI_LIMIT_CLAMP);
 	fireWindZSpinner->set_float_limits(-10.0, 10.0, GLUI_LIMIT_CLAMP);
 }
 

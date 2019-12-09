@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <GL/glut.h>
 #include "globalvar.h"
+#include "noise.h"
 
 #define MAX_PARTICLES 5000
 
@@ -12,13 +13,15 @@ float emissionYMax = 1.0;
 float emissionZMin = -1.0;
 float emissionZMax = 1.0;
 
-float minVel = 0.05;
-float maxVel = 0.2;
+float minVel = 0.001;
+float maxVel = 0.005;
 float maxTemp = 100.0;
 float maxLifespan = 100.0;
 
 int id;
 Particle particles[MAX_PARTICLES];
+
+PerlinNoise pn;
 
 int ParticleSystem::generateInt(int min, int max) {
 	int num = (rand() % (max - min + 1)) + min;
@@ -31,20 +34,20 @@ float ParticleSystem::generateFloat(float min, float max) {
 }
 
 void ParticleSystem::resetSystem() {
-	int i = 0;
+	int i;
 	id = 0;
 	for (i = 0; i < MAX_PARTICLES; i++) {
 		particles[i].status = 0;
-		particles[i].point.xPosOne = 0;
-		particles[i].point.yPosOne = 0;
-		particles[i].point.zPosOne = 0;
-		particles[i].point.xPosTwo = 0;
-		particles[i].point.yPosTwo = 0;
-		particles[i].point.zPosTwo = 0;
+		particles[i].point.xPos = 0;
+		particles[i].point.yPos = 0;
+		particles[i].point.zPos = 0;
 		particles[i].velocity = 0;
+		particles[i].noiseX = 0;
+		particles[i].noiseY = 0;
 		particles[i].red = 0.0;
 		particles[i].green = 0.0;
 		particles[i].blue = 0.0;
+		particles[i].alpha = 0.0;
 		particles[i].temperature = 0;	
 		particles[i].age = 0;
 		particles[i].lifespan = 0;
@@ -63,16 +66,16 @@ void ParticleSystem::createParticles() {
 	for (i = 0; i < MAX_PARTICLES; i++) {
 		if (particles[i].status == 0) {
 			id++;
-			particles[i].point.xPosOne = generateInt(emissionXMin, emissionXMax);
-			particles[i].point.yPosOne = generateInt(emissionYMin, emissionYMax);
-			particles[i].point.zPosOne = generateInt(emissionZMin, emissionZMax);
-			particles[i].point.xPosTwo = particles[i].point.xPosOne + 0.1;
-			particles[i].point.yPosTwo = particles[i].point.yPosOne;
-			particles[i].point.zPosTwo = particles[i].point.zPosOne;
+			particles[i].point.xPos = generateFloat(emissionXMin, emissionXMax);
+			particles[i].point.yPos = generateFloat(emissionYMin, emissionYMax);
+			particles[i].point.zPos = generateFloat(emissionZMin, emissionZMax);
 			particles[i].velocity = generateFloat(minVel, maxVel);
+			particles[i].noiseX = generateFloat(0, 1);
+			particles[i].noiseY = generateFloat(0, 1);
 			particles[i].red = generateFloat(0, 255)/255.0;
 			particles[i].green = generateFloat(0, 255)/255.0;
 			particles[i].blue = generateFloat(0, 255)/255.0;
+			particles[i].alpha = 1.0;
 			particles[i].temperature = maxTemp;	
 			particles[i].age = 0;
 			particles[i].lifespan = generateInt(0, maxLifespan);
@@ -83,62 +86,67 @@ void ParticleSystem::createParticles() {
 	}
 }
 
-void ParticleSystem::modifyParticles() {
+void ParticleSystem::modifyParticles(int deltaTime) {
 	int i = 0;
 	for (i = 0; i < MAX_PARTICLES; i++) {
 		if (particles[i].status == 1) {
 			// X Movement
 			if (generateInt(0, 2) == 0) {
-				particles[i].point.xPosOne += particles[i].velocity;
-				particles[i].point.xPosTwo += particles[i].velocity;
+				particles[i].point.xPos += particles[i].velocity * deltaTime;
 			}
 			else {
-				particles[i].point.xPosOne -= particles[i].velocity;
-				particles[i].point.xPosTwo -= particles[i].velocity;
+				particles[i].point.xPos -= particles[i].velocity * deltaTime;
 			}
 			// Z Movement
 			if (generateInt(0, 2) == 0) {
-				particles[i].point.zPosOne += particles[i].velocity;
-				particles[i].point.zPosTwo += particles[i].velocity;
+				particles[i].point.zPos += particles[i].velocity * deltaTime;
 			}
 			else {
-				particles[i].point.zPosOne -= particles[i].velocity;
-				particles[i].point.zPosTwo -= particles[i].velocity;
+				particles[i].point.zPos -= particles[i].velocity * deltaTime;
 			}
 			// Y Movement
-			particles[i].point.yPosOne += particles[i].velocity;
-			particles[i].point.yPosTwo += particles[i].velocity;
-			// Lower lifespan
-			particles[i].lifespan--;
+			particles[i].point.yPos += particles[i].velocity * deltaTime;
+			// Update age
 			particles[i].age++;
+			// Update alpha
+			particles[i].alpha = 1.0 - (particles[i].age/particles[i].lifespan);
 			// Kill particle if lifespan ends
-			if (particles[i].lifespan < 0) {
+			if (particles[i].age >= particles[i].lifespan) {
 				particles[i].status = 0;
 			}
 		}
 	}
 }
 
-void ParticleSystem::step() {
+void ParticleSystem::step(int deltaTime) {
 	// Create new particle
 	int i;
 	for (i = 0; i < emitterRate; i++) {
 		createParticles();
 	}
 	// Modify particles as necessary
-	modifyParticles();
+	modifyParticles(deltaTime);
 }
 
 void ParticleSystem::drawScene() {
-	int i = 0;
-	glLineWidth(2);
-	glBegin(GL_LINES);
-	for (i = 0; i < MAX_PARTICLES; i++) {
+	for (int i = 0; i < MAX_PARTICLES; i++) {
 		if (particles[i].status == 1) {
-			glColor3f(particles[i].red, particles[i].green, particles[i].blue);
-			glVertex3f(particles[i].point.xPosOne, particles[i].point.yPosOne, particles[i].point.zPosOne);
-			glVertex3f(particles[i].point.xPosTwo, particles[i].point.yPosTwo, particles[i].point.zPosTwo);
+			float x = particles[i].point.xPos;
+			float y = particles[i].point.yPos;
+			float z = particles[i].point.zPos;
+
+			float size = particles[i].lifespan - particles[i].age;
+			glPointSize(size/2);
+			glBegin(GL_POINTS);
+			//glColor4f(n, n, n, particles[i].alpha);
+			glColor4f(particles[i].red, particles[i].green, particles[i].blue, particles[i].alpha);
+			glVertex3f(x, y, z);
+			//glVertex3f(particles[i].point.xPos - size, particles[i].point.yPos - size, particles[i].point.zPos);
+			//glVertex3f(particles[i].point.xPos - size, particles[i].point.yPos + size, particles[i].point.zPos);
+			//glVertex3f(particles[i].point.xPos + size, particles[i].point.yPos + size, particles[i].point.zPos);
+			//glVertex3f(particles[i].point.xPos + size, particles[i].point.yPos - size, particles[i].point.zPos);
+			glEnd();
 		}
 	}
-	glEnd();
+	
 }

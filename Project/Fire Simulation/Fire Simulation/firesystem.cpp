@@ -2,32 +2,31 @@
 #include "particle.h"
 #include "firesystem.h"
 #include "globalvar.h"
+#include "noise.h"
+
+float flameR = 245.0;
+float flameG = 255.0;
+float flameB = 10.0;
 
 void FireSystem::changeColor(Particle* particle) {
-	particle->red = 245.0/255.0;
-	particle->green = (particle->temperature/100*152.0)/255.0;
-	particle->blue = (particle->temperature/100*29.0)/255.0;
+	particle->red = flameR/255.0;
+	particle->green = (1 - particle->point.yPos/5.0);
+	particle->blue = flameB/255.0;
+	particle->alpha = (particle->temperature/100.0);
 }
 
-void FireSystem::calculateTurbulence(Particle* particle) {
-	// X Movement
-	if (generateInt(0, 2) == 0) {
-		particle->point.xPosOne += fireTurbulenceAmp;
-		particle->point.xPosTwo += fireTurbulenceAmp;
-	}
-	else {
-		particle->point.xPosOne -= fireTurbulenceAmp;
-		particle->point.xPosTwo -= fireTurbulenceAmp;
-	}
-	// Z Movement
-	if (generateInt(0, 2) == 0) {
-		particle->point.zPosOne += fireTurbulenceAmp;
-		particle->point.zPosTwo += fireTurbulenceAmp;
-	}
-	else {
-		particle->point.zPosOne -= fireTurbulenceAmp;
-		particle->point.zPosTwo -= fireTurbulenceAmp;
-	}
+void FireSystem::calculateTurbulence(Particle* particle, int deltaTime) {
+	int amplitude = 0.99 + fireTurbulenceAmp;
+	int frequency = 0.99 + fireTurbulenceScale;
+	particle->noiseX += 0.01;
+	float one = (amplitude * 2.2) * pn.computeNoise(particle->noiseX * (frequency * 0.7));
+	float two = (amplitude) * pn.computeNoise(particle->noiseX * (frequency));
+	float three = (amplitude * 0.4) * pn.computeNoise(particle->noiseX * (frequency * 3.1));
+	float noise = one + two + three;
+	float multiplier = 1/particle->temperature * deltaTime;
+	noise *= multiplier;
+	particle->point.xPos += noise;
+	particle->point.zPos += noise;
 }
 
 void FireSystem::createParticles() {
@@ -41,20 +40,20 @@ void FireSystem::createParticles() {
 	for (i = 0; i < MAX_PARTICLES; i++) {
 		if (particles[i].status == 0) {
 			id++;
+			particles[i].point.xPos = generateFloat(emissionXMin, emissionXMax);
+			particles[i].point.yPos = generateFloat(emissionYMin, emissionYMax);
+			particles[i].point.zPos = generateFloat(emissionZMin, emissionZMax);
 			particles[i].velocity = generateFloat(minVel, maxVel);
-			particles[i].point.xPosOne = generateInt(emissionXMin, emissionXMax);
-			particles[i].point.yPosOne = generateInt(emissionYMin, emissionYMax);
-			particles[i].point.zPosOne = generateInt(emissionZMin, emissionZMax);
-			particles[i].point.xPosTwo = particles[i].point.xPosOne + 0.1;
-			particles[i].point.yPosTwo = particles[i].point.yPosOne;
-			particles[i].point.zPosTwo = particles[i].point.zPosOne;
+			particles[i].noiseX = generateFloat(0, 1);
+			particles[i].noiseY = generateFloat(0, 1);
 			// FLAME COLOR
-			particles[i].red = 245.0/255.0;
-			particles[i].green = 208.0/255.0;
-			particles[i].blue = 32.0/255.0;
+			particles[i].red = flameR/255.0;
+			particles[i].green = flameG/255.0;
+			particles[i].blue = flameB/255.0;
+			particles[i].alpha = 1.0;
 			particles[i].temperature = maxTemp;	
 			particles[i].age = 0;
-			particles[i].lifespan = generateInt(0, maxLifespan);
+			particles[i].lifespan = 100 * (int) (pn.computeNoise(0.15) + 1.0) / 2.0;
 			particles[i].id = id;
 			particles[i].status = 1;
 			break;
@@ -62,42 +61,39 @@ void FireSystem::createParticles() {
 	}
 }
 
-void FireSystem::modifyParticles() {
+void FireSystem::modifyParticles(int deltaTime) {
 	int i = 0;
 	for (i = 0; i < MAX_PARTICLES; i++) {
 		if (particles[i].status == 1) {
-			// X Movement
-			particles[i].point.xPosOne += fireWindX;
-			particles[i].point.xPosTwo += fireWindX;
-			// Z Movement
-			particles[i].point.zPosOne += fireWindZ;
-			particles[i].point.zPosTwo += fireWindZ;
-			// Y Movement
-			particles[i].point.yPosOne += particles[i].velocity * fireRiseRate + fireWindY;
-			particles[i].point.yPosTwo += particles[i].velocity * fireRiseRate + fireWindY;
-			// Calculate Turbulence
-			calculateTurbulence(&particles[i]);
-			// Lower lifespan
-			particles[i].lifespan--;
+			// Update age
 			particles[i].age++;
 			// Lower temperature
 			particles[i].temperature -= fireCoolRate;
 			// Change color based on temperature
 			changeColor(&particles[i]);
+			// X Movement based on temperature
+			particles[i].point.xPos += (fireWindX * 1/particles[i].temperature * deltaTime);
+			// Z Movement based on temperature
+			particles[i].point.zPos += (fireWindZ * 1/particles[i].temperature * deltaTime);
+			// Y Movement based on temperature
+			particles[i].point.yPos += (fireWindY * 1/particles[i].temperature * deltaTime);
+			particles[i].point.yPos += (particles[i].velocity * fireRiseRate * particles[i].temperature * deltaTime);
+			// Calculate Turbulence
+			calculateTurbulence(&particles[i], deltaTime);
 			// Kill particle if lifespan ends
-			if (particles[i].lifespan < 0) {
+			if (particles[i].age >= particles[i].lifespan) {
 				particles[i].status = 0;
 			}
 		}
 	}
 }
 
-void FireSystem::step() {
+void FireSystem::step(int deltaTime) {
 	// Create new particle
 	int i;
 	for (i = 0; i < emitterRate; i++) {
 		createParticles();
 	}
 	// Modify particles as necessary
-	modifyParticles();
+	modifyParticles(deltaTime);
 }

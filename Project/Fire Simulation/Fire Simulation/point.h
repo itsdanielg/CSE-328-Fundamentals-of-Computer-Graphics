@@ -9,13 +9,9 @@ class Point {
 
 public:
 
-	float xPosOne;
-	float yPosOne;
-	float zPosOne;
-
-	float xPosTwo;
-	float yPosTwo;
-	float zPosTwo;
+	float xPos;
+	float yPos;
+	float zPos;
 
 };
 

@@ -4,6 +4,7 @@
 #include <GL/glut.h>
 #include "globalvar.h"
 #include "gui.h"
+#include "noise.h"
 
 ////////// INIT VARIABLES //////////
 int mainWindow;
@@ -14,18 +15,32 @@ int windowPosX = (1920 - windowWidth) / 2;
 int windowPosY = (1080 - windowHeight) / 2;
 FireSystem fireSystem;
 
-int stepCounter = 0;
-int frameCounter = 0;
+bool drawFrame = false;
+int timeSinceStart = 0;
+int timeSinceStepUpdate = 0;
+int timeStepUpdate = 0;
+int timeSinceFrameUpdate = 0;
+int timeFrameUpdate = 0;
+int deltaTime = 0;
 
 void init() {
 	glClearColor(0.0, 0.0, 0.0, 0.0);
-	glEnable(GL_DEPTH_TEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_BLEND);
+	//glEnable(GL_DEPTH_TEST);
 }
 
 void display() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	fireSystem.drawScene();
-	glutSwapBuffers();
+	if (drawFrame) {
+		fireSystem.drawScene();
+		drawFrame = false;
+		glutSwapBuffers();
+	}
+	if (sysStatus == 0) {
+		fireSystem.drawScene();
+		glutSwapBuffers();
+	}
 }
 
 void reshape(int width, int height) {
@@ -53,16 +68,19 @@ void idle() {
 		glutSetWindow(mainWindow);
 	}
 	if (sysStatus == 1) {
-		stepCounter++;
-		frameCounter++;
-		if (stepCounter > 333/timingStepsPerSec) {
-			fireSystem.step();
-			stepCounter = 0;
+		timeSinceStart = glutGet(GLUT_ELAPSED_TIME);
+		timeSinceStepUpdate = timeSinceStart - timeStepUpdate;
+		if (timeSinceStepUpdate / (1000/timingStepsPerSec) >= 1) {
+			deltaTime = timeSinceStart - timeStepUpdate;
+			timeStepUpdate = timeSinceStart;
+			fireSystem.step(deltaTime);
 		}
-		if (frameCounter > 333/timingFramesPerSec) {
+		timeSinceFrameUpdate = timeSinceStart - timeFrameUpdate;
+		if (timeSinceFrameUpdate / (1000/timingFramesPerSec) >= 1) {
+			timeFrameUpdate = timeSinceStart;
 			frameCount++;
 			glui->sync_live();
-			frameCounter = 0;
+			drawFrame = true;
 		}
 	}
 	reshape(windowWidth, windowHeight);
